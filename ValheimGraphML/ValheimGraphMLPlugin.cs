@@ -1,8 +1,8 @@
 ﻿using System.IO;
 using BepInEx;
+using GraphMLWriter;
 using Jotunn;
-using VDS.RDF;
-using VDS.RDF.Writing;
+using ValheimGraphML.Model;
 
 namespace ValheimGraphML
 {
@@ -17,35 +17,27 @@ namespace ValheimGraphML
 
         private void Awake()
         {
-            Example();
+            var path = Path.Combine(Paths.ConfigPath, "file.graphml");
+            var input = Example();
+            var writer = new Writer<GraphGame>();
+            writer.Save(input: input, path: path);
         }
 
-        public static void Example()
+        private static GraphGame Example()
         {
-            IGraph graph = new Graph();
-
-            ILiteralNode requiredFor = new LiteralNode("required for");
-            ILiteralNode crafts = new LiteralNode("crafts");
-            
-            ILiteralNode wood = new LiteralNode("wood");
-            ILiteralNode stone = new LiteralNode("stone");
-            ILiteralNode hammer_recipe = new LiteralNode("recipe for a hammer");
-            ILiteralNode hammer = new LiteralNode("hammer");
-
-            graph.Assert(new Triple(wood, requiredFor, hammer_recipe));
-            graph.Assert(new Triple(stone, requiredFor, hammer_recipe));
-            graph.Assert(new Triple(hammer_recipe, crafts, hammer));
-            
-            foreach (Triple triple in graph.Triples) 
+            var a = new GraphItem { InternalName = "A" };
+            var b = new GraphItem { InternalName = "B" };
+            var c = new GraphItem { InternalName = "C" };
+            return new GraphGame
             {
-                Jotunn.Logger.LogInfo(triple.ToString());
-            }
-
-            TripleStore store = new TripleStore();
-            store.Add(graph);
-            
-            GraphMLWriter writer = new GraphMLWriter();
-            writer.Save(store, Path.Combine(Paths.ConfigPath, "file.graphml"));
+                Items = new[] { a, b, c },
+                Recipes = new[]
+                {
+                    new GraphRecipe { From = a, To = b },
+                    new GraphRecipe { From = a, To = c },
+                    new GraphRecipe { From = b, To = c }
+                }
+            };
         }
     }
 }

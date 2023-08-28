@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Runtime.Remoting.Messaging;
 using BepInEx;
 using Jotunn;
 using VDS.RDF;
@@ -24,28 +25,26 @@ namespace ValheimGraphML
         {
             IGraph graph = new Graph();
 
-            ILiteralNode requiredFor = new LiteralNode("required for");
-            ILiteralNode crafts = new LiteralNode("crafts");
+            ILiteralNode requiredFor = graph.CreateLiteralNode("required for");
+            ILiteralNode crafts = graph.CreateLiteralNode("crafts");
             
-            ILiteralNode wood = new LiteralNode("wood");
-            ILiteralNode stone = new LiteralNode("stone");
-            ILiteralNode hammer_recipe = new LiteralNode("recipe for a hammer");
-            ILiteralNode hammer = new LiteralNode("hammer");
+            ILiteralNode wood = graph.CreateLiteralNode("wood");
+            ILiteralNode stone = graph.CreateLiteralNode("stone");
+            ILiteralNode hammer_recipe = graph.CreateLiteralNode("recipe for a hammer");
+            ILiteralNode hammer = graph.CreateLiteralNode("hammer");
 
             graph.Assert(new Triple(wood, requiredFor, hammer_recipe));
             graph.Assert(new Triple(stone, requiredFor, hammer_recipe));
             graph.Assert(new Triple(hammer_recipe, crafts, hammer));
-            
-            foreach (Triple triple in graph.Triples) 
-            {
-                Jotunn.Logger.LogInfo(triple.ToString());
-            }
 
             TripleStore store = new TripleStore();
             store.Add(graph);
-            
+
             GraphMLWriter writer = new GraphMLWriter();
             writer.Save(store, Path.Combine(Paths.ConfigPath, "file.graphml"));
+
+            GraphVizWriter dotWriter = new GraphVizWriter();
+            dotWriter.Save(graph, Path.Combine(Paths.ConfigPath, "file.dot"));
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using System.Runtime.Remoting.Messaging;
+using System.Text;
 using BepInEx;
 using Jotunn;
 using VDS.RDF;
@@ -24,14 +24,18 @@ namespace ValheimGraphML
         public static void Example()
         {
             IGraph graph = new Graph();
+            graph.NamespaceMap.AddNamespace("material", UriFactory.Create("urn:prefab:material"));
+            graph.NamespaceMap.AddNamespace("recipe", UriFactory.Create("urn:crafting:recipe"));
+            graph.NamespaceMap.AddNamespace("item", UriFactory.Create("urn:prefab:item"));
+            graph.NamespaceMap.AddNamespace("relation", UriFactory.Create("urn:crafting:relation"));
 
-            ILiteralNode requiredFor = graph.CreateLiteralNode("required for");
-            ILiteralNode crafts = graph.CreateLiteralNode("crafts");
-            
-            ILiteralNode wood = graph.CreateLiteralNode("wood");
-            ILiteralNode stone = graph.CreateLiteralNode("stone");
-            ILiteralNode hammer_recipe = graph.CreateLiteralNode("recipe for a hammer");
-            ILiteralNode hammer = graph.CreateLiteralNode("hammer");
+            IUriNode requiredFor = graph.CreateUriNode("relation:required for");
+            IUriNode crafts = graph.CreateUriNode("relation:crafts");
+
+            IUriNode wood = graph.CreateUriNode("material:wood");
+            IUriNode stone = graph.CreateUriNode("material:stone");
+            IUriNode hammer_recipe = graph.CreateUriNode("recipe:hammer");
+            IUriNode hammer = graph.CreateUriNode("item:hammer");
 
             graph.Assert(new Triple(wood, requiredFor, hammer_recipe));
             graph.Assert(new Triple(stone, requiredFor, hammer_recipe));
@@ -44,7 +48,8 @@ namespace ValheimGraphML
             writer.Save(store, Path.Combine(Paths.ConfigPath, "file.graphml"));
 
             GraphVizWriter dotWriter = new GraphVizWriter();
-            dotWriter.Save(graph, Path.Combine(Paths.ConfigPath, "file.dot"));
+            using var output = new StreamWriter(File.OpenWrite(Path.Combine(Paths.ConfigPath, "file.dot")), Encoding.UTF8);
+            dotWriter.Save(graph, output);
         }
     }
 }
